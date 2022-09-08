@@ -1,0 +1,99 @@
+from pyspark.sql import *
+from pyspark.sql.functions import *
+
+spark = SparkSession.builder.master("local[*]").appName("test").getOrCreate()
+sc = spark.sparkContext
+'''
+------------using dataframe---------------
+--READ DATA FROM LOCAL AND WRITE INTO SNOWFLAKE
+data="C:\\bigdata\\datasets\\asl.csv"
+df=spark.read.format('csv').option('header','true').option('inferSchema','true')\
+  .option('sep',',').load(data)
+
+#WRITE/STORE TABLE IN SNOWFLAKE INTO 'rushidb' AS TABLE 'asltab' 
+df.write.mode('append').format("net.snowflake.spark.snowflake") \
+  .option("sfURL", "tw54823.ap-southeast-1.snowflakecomputing.com") \
+  .option("sfUser", "RUSHIKESH") \
+  .option("sfPassword", "Rushikesh123") \
+  .option("sfDatabase", "rushidb") \
+  .option("sfSchema", "public") \
+  .option("sfWarehouse", "SMALLWH") \
+  .option('dbtable','asltab').save()
+
+
+----------------using snowflake Options--------------------
+# READ DATA FROM SNOWFLAKE AND WRITE AGAIN INTO SNOWFLAKE
+'''
+sfOptions = {
+  "sfURL" : "tw54823.ap-southeast-1.snowflakecomputing.com",
+  "sfUser" : "RUSHIKESH",
+  "sfPassword" : "Rushikesh123",
+  "sfDatabase" : "RUSHIDB",
+  "sfSchema" : "PUBLIC",
+  "sfWarehouse" : "SMALLWH"}
+
+SNOWFLAKE_SOURCE_NAME = "net.snowflake.spark.snowflake"
+
+df = spark.read.format(SNOWFLAKE_SOURCE_NAME) \
+  .options(**sfOptions) \
+  .option("query",  "select * from banktab") \
+  .load()
+
+---orr read like this-----------------
+df=spark.read.format("net.snowflake.spark.snowflake")\
+  .option("sfURL","tw54823.ap-southeast-1.snowflakecomputing.com")\
+  .option("sfUser","RUSHIKESH")\
+  .option("sfPassword","Rushikesh123")\
+  .option("sfDatabase","rushidb")\
+  .option("sfSchema","public")\
+  .option("sfWarehouse","SMALLWH")\
+  .option("query",  "select * from banktab")\
+  .load()
+
+df1=df.withColumnRenamed('marital','marital_status').drop('marital')
+
+df1.write.mode('append').format(SNOWFLAKE_SOURCE_NAME).options(**sfOptions)\
+  .option('dbtable','newbanktab').save()
+
+df1.show()
+
+'''
+# You might need to set these
+sc._jsc.hadoopConfiguration().set("fs.s3n.awsAccessKeyId", "<AWS_KEY>")
+sc._jsc.hadoopConfiguration().set("fs.s3n.awsSecretAccessKey", "<AWS_SECRET>")
+
+# Set options below
+sfOptions = {
+  "sfURL" : "tw54823.ap-southeast-1.snowflakecomputing.com",
+  "sfUser" : "RUSHIKESH",
+  "sfPassword" : "Rushikesh123",
+  "sfDatabase" : "SNOWFLAKE_SAMPLE_DATA",
+  "sfSchema" : "TPCH_SF10",
+  "sfWarehouse" : "SMALLWH"
+}
+
+SNOWFLAKE_SOURCE_NAME = "net.snowflake.spark.snowflake"
+
+df = spark.read.format(SNOWFLAKE_SOURCE_NAME) \
+  .options(**sfOptions) \
+  .option("query",  "select * from customer") \
+  .load()
+
+df.show()
+'''
+
+'''
+#--OORRRR----
+
+df=spark.read.format("net.snowflake.spark.snowflake")\
+  .option("sfURL","tw54823.ap-southeast-1.snowflakecomputing.com")\
+  .option("sfUser","RUSHIKESH")\
+  .option("sfPassword","Rushikesh123")\
+  .option("sfDatabase","rushidb")\
+  .option("sfSchema","public")\
+  .option("sfWarehouse","SMALLWH")\
+  .option("query",  "select * from banktab")\
+  .load()
+
+df.show()
+'''
